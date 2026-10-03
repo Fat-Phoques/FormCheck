@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../static/styles.css" />
+
+    <title>FormCheck.ai</title>
+  </head>
+  <body>
+    <h1>FormCheck.ai</h1>
+    <div id="video-container">
+      <img id="feed" />
+    </div>
+
+    <label for="camera">Camera</label>
+    <select id="camera" onclick="selectCamera()">
+      {% if cameras %} {% for camera in cameras %}
+      <option value="{{ camera }}">Camera {{ camera }}</option>
+      {% endfor %} {% else %}
+      <option>No camera found</option>
+      {% endif %}
+    </select>
+
+    <button id="end" onclick="stopCamera()">END</button>
+    <button id="start" onclick="startCamera()">START</button>
+  </body>
+
+  <script>
+    function selectCamera() {
+      const camera = document.getElementById("camera").value;
+
+      fetch("/select_camera", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          camera: camera,
+        }),
+      });
+    }
+
+    function startCamera() {
+      fetch("/start_camera", {
+        method: "POST",
+      });
+
+      const startBtn = document.getElementById("start");
+      const feed = document.getElementById("feed");
+      feed.src = "/video_feed";
+      if(feed.clientWidth < 100){
+        startBtn.innerText = "LOADING";
+    } else {
+        startBtn.innerText = "START"
+    }
+      
+    }
+
+    function stopCamera() {
+      const stopBtn = document.getElementById("end");
+      const feed = document.getElementById("feed");
+      feed.src = "";
+      stopBtn.innerText = "LOADING";
+
+      fetch("/stop_camera", {
+        method: "POST",
+      });
+    }
+  </script>
+</html>
