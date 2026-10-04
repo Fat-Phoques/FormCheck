@@ -1,4 +1,5 @@
 import webbrowser
+import os
 
 import cv2 as cv
 import mediapipe as mp
@@ -8,8 +9,13 @@ from mp_init.landmark_init import landmarker
 
 camera = 0  # default camera
 camera_running = False
+joint_history = []
+joint_x_avg = 0
+joint_y_avg = 0
+
 
 app = Flask(__name__)
+
 
 def find_cameras():
     cameras = []
@@ -39,14 +45,31 @@ def select_camera():
 def home():
     cameras = find_cameras()
 
-    return render_template("index.html", cameras=cameras)  # homepage
+    return render_template("home.html", cameras=cameras)  # homepage
 
 
 def show_joint(pose, landmark, frame, dot_size, bgr_color):
-    #once this works add the average cords to this
+    # once this works add the average cords to this
+    global joint_x_avg, joint_y_avg
     joint = pose[landmark]
-    joint_px_x = int(frame.shape[1] * joint.x)
-    joint_px_y = int(frame.shape[0] * joint.y)
+
+    joint_history.append((joint.x, joint.y))
+
+    if len(joint_history) > 3:
+        joint_history.pop(0)
+
+    joint_x_avg,joint_y_avg = 0, 0
+    for x, y in joint_history:
+        joint_x_avg += x
+        joint_y_avg += y
+
+    joint_x_avg = joint_x_avg / len(joint_history)
+    joint_y_avg = joint_y_avg / len(joint_history)
+
+
+    joint_px_x = int(frame.shape[1] * joint_x_avg)
+    joint_px_y = int(frame.shape[0] * joint_y_avg)
+
     cv.circle(
         frame,
         (joint_px_x, joint_px_y),
@@ -59,7 +82,7 @@ def show_joint(pose, landmark, frame, dot_size, bgr_color):
 def generate_frames():
     webcam = cv.VideoCapture(camera)
 
-    frame_num = 0
+    frame_num = 0   
 
     while camera_running:
         is_true, frame = webcam.read()
@@ -132,5 +155,6 @@ def stop_camera():
 
 # THIS SHOULD ALWAYS RUN IN THE END
 if __name__ == "__main__":
-    webbrowser.open("http://127.0.0.1:5000")  # opens the local host in chrome
-    app.run(debug=True, use_reloader=False)
+    port = int(os.environ.get("PORT", 10000))
+    webbrowser.open(f"http://127.0.0.1:{port}")  # opens the local host in chrome
+    app.run(debug=True, use_reloader=False, port=port, host='0.0.0.0')
