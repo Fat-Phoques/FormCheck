@@ -820,7 +820,9 @@ function squats(angle) {
 function bicepCurls(angle) {
   updateRepScore(angle, 60);
 
-  if (angle < 70 && bicepState === "up") {
+  // Enter the curled state once the elbow bends enough.
+  // 100 degrees is more forgiving of camera/pose-estimation variation.
+  if (angle < 100 && bicepState === "up") {
     bicepState = "down";
     setFeedback("Good curl. Lower the weight with control.");
     return;
