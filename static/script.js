@@ -1,8 +1,3 @@
-import {
-  FilesetResolver,
-  PoseLandmarker,
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs";
-
 // ======================================================
 // HTML ELEMENTS
 // ======================================================
@@ -31,6 +26,7 @@ let lastVideoTime = -1;
 let reps = 0;
 let squatState = "up";
 let lastFeedback = "";
+let poseLoading = false;
 
 const jointHistory = {};
 
@@ -62,13 +58,19 @@ function resetWorkoutState() {
 // ======================================================
 
 async function initializeMediaPipe() {
-  if (poseLandmarker) {
+  if (poseLandmarker || poseLoading) {
     return;
   }
 
-  setFeedback("Loading pose tracking...");
+  poseLoading = true;
 
   try {
+    setFeedback("Loading pose tracking...");
+
+    const { FilesetResolver, PoseLandmarker } = await import(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs"
+    );
+
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm",
     );
@@ -84,11 +86,21 @@ async function initializeMediaPipe() {
       minTrackingConfidence: 0.5,
     });
 
-    setFeedback("Pose tracking ready. Select a camera to start.");
+    if (cameraRunning) {
+      setFeedback("Camera running. Pose tracking ready.");
+    } else {
+      setFeedback("Pose tracking ready. Select a camera to start.");
+    }
   } catch (error) {
     console.error("MediaPipe initialization failed:", error);
-    setFeedback("Could not load pose tracking.");
-    throw error;
+
+    if (cameraRunning) {
+      setFeedback("Camera running. Pose tracking unavailable.");
+    } else {
+      setFeedback("Pose tracking unavailable. Camera can still be used.");
+    }
+  } finally {
+    poseLoading = false;
   }
 }
 
@@ -139,8 +151,6 @@ async function startCamera() {
   startButton.disabled = true;
 
   try {
-    await initializeMediaPipe();
-
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error("Camera API is unavailable.");
     }
@@ -193,7 +203,15 @@ async function startCamera() {
 
     await findCameras();
 
-    setFeedback("Camera running. Stand where your full body is visible.");
+    setFeedback(
+      poseLandmarker
+        ? "Camera running. Stand where your full body is visible."
+        : "Camera running. Loading pose tracking..."
+    );
+
+    if (!poseLandmarker) {
+      initializeMediaPipe();
+    }
 
     requestAnimationFrame(processVideo);
   } catch (error) {
@@ -460,10 +478,9 @@ cameraSelect.addEventListener("change", async () => {
 async function initialize() {
   stopButton.disabled = true;
   setRating(0);
-  setFeedback("Loading pose tracking...");
+  setFeedback("Camera ready. Select a camera or press Start Camera.");
 
   try {
-    await initializeMediaPipe();
     await findCameras();
 
     if (navigator.mediaDevices?.addEventListener) {
