@@ -9,5 +9,3 @@ options = PoseLandmarkerOptions(
 )
 
 landmarker = PoseLandmarker.create_from_options(options)
-
-print("\n LANDMARKER MADE!")
