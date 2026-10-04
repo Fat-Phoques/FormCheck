@@ -1,0 +1,454 @@
+:root {
+  --bg: #0d1219;
+  --bg-soft: #111821;
+  --panel: #151d27;
+  --panel-light: #1a2430;
+  --panel-dark: #0f151d;
+
+  --text: #eef3f8;
+  --muted: #8a98a9;
+  --muted-dark: #657386;
+
+  --blue: #3f88e8;
+  --blue-light: #5ca0f2;
+  --blue-dark: #2869b8;
+
+  --green: #68c993;
+  --border: #273340;
+  --border-light: #334251;
+
+  --radius: 16px;
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+html {
+  color-scheme: dark;
+  background: var(--bg);
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  padding: 28px 34px 34px;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(63, 136, 232, 0.08), transparent 26%),
+    linear-gradient(180deg, #0d1219 0%, #0b1017 100%);
+}
+
+/* Page heading */
+
+body > h1 {
+  width: min(1280px, 100%);
+  margin: 0 auto 22px;
+
+  color: #f3f7fb;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1;
+  font-weight: 750;
+  letter-spacing: -0.045em;
+}
+
+body > h1::after {
+  content: ".";
+  color: var(--blue-light);
+}
+
+/* Main camera */
+
+#video-container {
+  position: relative;
+
+  width: min(1280px, 100%);
+  aspect-ratio: 16 / 9;
+  min-height: 280px;
+  max-height: calc(100vh - 285px);
+  margin: 0 auto 14px;
+
+  overflow: hidden;
+
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+
+  background: #080c12;
+  box-shadow: var(--shadow);
+}
+
+#video-container::before {
+  content: "LIVE CAMERA";
+
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 3;
+
+  padding: 6px 9px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+
+  color: #b3bfcc;
+  background: rgba(9, 14, 20, 0.75);
+
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+#video-container::after {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.06),
+      transparent 25%,
+      transparent 75%,
+      rgba(0, 0, 0, 0.24)
+    );
+}
+
+#video,
+#canvas {
+  position: absolute;
+  inset: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  object-position: center;
+
+  background: #080c12;
+}
+
+#video {
+  z-index: 0;
+}
+
+#canvas {
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Camera controls */
+
+#camera-controls {
+  width: min(1280px, 100%);
+  margin: 0 auto 14px;
+  padding: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  background: var(--panel);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+}
+
+#camera {
+  min-width: 210px;
+  height: 40px;
+  padding: 0 12px;
+
+  color: var(--text);
+  background: var(--panel-dark);
+
+  border: 1px solid var(--border-light);
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+#camera:hover,
+#camera:focus {
+  border-color: #425367;
+  outline: none;
+}
+
+button {
+  height: 40px;
+  padding: 0 16px;
+
+  border: 1px solid transparent;
+  border-radius: 9px;
+
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+#start-button {
+  color: #ffffff;
+  background: var(--blue);
+}
+
+#start-button:hover:not(:disabled) {
+  background: var(--blue-light);
+}
+
+#stop-button {
+  color: #b4bfcc;
+  background: transparent;
+  border-color: var(--border-light);
+}
+
+#stop-button:hover:not(:disabled) {
+  color: #eef3f8;
+  background: #1b2531;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Feedback panel.
+   The current HTML calls this element "form-status", so the CSS turns it
+   into the feedback section without requiring an HTML change. */
+
+#form-status {
+  width: min(1280px, 100%);
+  min-height: 88px;
+  margin: 0 auto 14px;
+  padding: 17px 18px 15px 44px;
+
+  position: relative;
+
+  display: flex;
+  align-items: center;
+
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+
+  color: #cbd5e0;
+  background:
+    linear-gradient(135deg, rgba(63, 136, 232, 0.06), transparent 42%),
+    var(--panel);
+
+  box-shadow: 0 7px 24px rgba(0, 0, 0, 0.15);
+
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+#form-status::before {
+  content: "FEEDBACK";
+
+  position: absolute;
+  top: 13px;
+  left: 18px;
+
+  color: var(--blue-light);
+
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+#form-status::after {
+  content: "";
+
+  position: absolute;
+  left: 19px;
+  bottom: 17px;
+
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+  background: var(--green);
+}
+
+/* Stats */
+
+#stats {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+
+  padding: 14px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+#stats > div {
+  min-height: 132px;
+  padding: 17px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  border: 1px solid var(--border);
+  border-radius: 11px;
+
+  background: var(--panel-dark);
+}
+
+#stats h2 {
+  margin: 0;
+
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+#stats p {
+  margin: 0;
+}
+
+#rep-count,
+#rating {
+  color: #f2f6fa;
+  font-size: clamp(42px, 5vw, 60px);
+  line-height: 0.95;
+  font-weight: 750;
+  letter-spacing: -0.055em;
+}
+
+#rating {
+  color: var(--blue-light);
+}
+
+#angle {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+
+  color: var(--muted-dark);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Subtle focus states */
+
+button:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--blue-light);
+  outline-offset: 2px;
+}
+
+/* Tablet */
+
+@media (max-width: 760px) {
+  body {
+    padding: 20px 16px 26px;
+  }
+
+  body > h1 {
+    margin-bottom: 17px;
+    font-size: 30px;
+  }
+
+  #video-container {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+    max-height: none;
+  }
+
+  #camera-controls {
+    flex-wrap: wrap;
+    justify-content: stretch;
+  }
+
+  #camera {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #start-button,
+  #stop-button {
+    flex: 1;
+  }
+
+  #stats {
+    grid-template-columns: 1fr;
+  }
+
+  #form-status {
+    min-height: 82px;
+  }
+}
+
+/* Small phones */
+
+@media (max-width: 440px) {
+  body {
+    padding-inline: 12px;
+  }
+
+  #camera-controls {
+    padding: 9px;
+  }
+
+  button {
+    padding: 0 12px;
+  }
+
+  #stats > div {
+    min-height: 112px;
+  }
+
+  #rep-count,
+  #rating {
+    font-size: 42px;
+  }
+}
