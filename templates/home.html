@@ -1,145 +1,99 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="../static/styles.css" />
 
-    <title>FormCheck</title>
-  </head>
+<head>
+    <meta charset="UTF-8">
 
-  <body>
-    <h1 id="title">FormCheck.ai</h1>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <div id="feed-stats">
-      <div id="video-container">
-        <img id="feed" />
-      </div>
+    <title>FormCheck.ai</title>
 
-      <div id="stats">
-        <label id="reps-label" for="reps">Reps</label>
-        <h1 id="reps">{{reps}}</h1>
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+</head>
 
-        <label id="rating-label" for="rating">Form Score</label>
-        <h2 id="rating">
-          <span id="score">{{score}}</span>/100
-        </h2>
-      </div>
+<body>
 
-      <div id="feedback">
-        Waiting for feedback...
-      </div>
+    <h1>FormCheck.ai</h1>
+
+    <!-- ========================= -->
+    <!-- CAMERA SECTION             -->
+    <!-- ========================= -->
+
+    <div id="video-container">
+
+        <video
+            id="video"
+            autoplay
+            playsinline
+            muted
+        ></video>
+
+        <canvas id="canvas"></canvas>
+
     </div>
 
-    <label for="camera">Camera</label>
 
-    <select id="camera" onclick="selectCamera()">
-      {% if cameras %}
-        {% for camera in cameras %}
-          <option value="{{ camera }}">Camera {{ camera }}</option>
-        {% endfor %}
-      {% else %}
-        <option>No camera found</option>
-      {% endif %}
-    </select>
+    <!-- ========================= -->
+    <!-- CAMERA CONTROLS            -->
+    <!-- ========================= -->
 
-    <button id="end" onclick="stopCamera()">END</button>
-    <button id="start" onclick="startCamera()">START</button>
+    <div id="camera-controls">
 
-    <script>
-      function selectCamera() {
-        const camera = document.getElementById("camera").value;
+        <select id="camera">
+            <option value="">Select Camera</option>
+        </select>
 
-        fetch("/select_camera", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            camera: camera,
-          }),
-        });
-      }
+        <button id="start-button">
+            Start Camera
+        </button>
 
-      async function startCamera() {
-        const startBtn = document.getElementById("start");
-        const endBtn = document.getElementById("end");
-        const feed = document.getElementById("feed");
+        <button id="stop-button">
+            Stop Camera
+        </button>
 
-        startBtn.innerText = "LOADING";
-        startBtn.disabled = true;
+    </div>
 
-        try {
-          const response = await fetch("/start_camera", {
-            method: "POST",
-          });
 
-          if (!response.ok) {
-            throw new Error("Failed to start camera");
-          }
+    <!-- ========================= -->
+    <!-- FORM STATUS                -->
+    <!-- ========================= -->
 
-          feed.src = "/video_feed";
+    <div id="form-status">
+        Camera not started
+    </div>
 
-          startBtn.innerText = "START";
-          startBtn.disabled = false;
 
-          endBtn.disabled = false;
-        } catch (error) {
-          console.error(error);
+    <!-- ========================= -->
+    <!-- STATS                      -->
+    <!-- ========================= -->
 
-          startBtn.innerText = "START";
-          startBtn.disabled = false;
-        }
-      }
+    <div id="stats">
 
-      async function stopCamera() {
-        const startBtn = document.getElementById("start");
-        const endBtn = document.getElementById("end");
-        const feed = document.getElementById("feed");
+        <div>
+            <h2>Reps</h2>
+            <p id="rep-count">0</p>
+        </div>
 
-        endBtn.innerText = "LOADING";
-        endBtn.disabled = true;
+        <div>
+            <h2>Rating</h2>
+            <p id="angle"><span id="rating">0</span>/100</p>
+        </div>
 
-        try {
-          const response = await fetch("/stop_camera", {
-            method: "POST",
-          });
+    </div>
 
-          if (!response.ok) {
-            throw new Error("Failed to stop camera");
-          }
 
-          feed.src = "";
+    <!-- ========================= -->
+    <!-- JAVASCRIPT                 -->
+    <!-- ========================= -->
 
-          endBtn.innerText = "END";
-          endBtn.disabled = false;
+    <script
+        type="module"
+        src="{{ url_for('static', filename='script.js') }}"
+    ></script>
 
-          startBtn.disabled = false;
-        } catch (error) {
-          console.error(error);
+</body>
 
-          endBtn.innerText = "END";
-          endBtn.disabled = false;
-        }
-      }
-
-      async function updateFeedback() {
-        try {
-          const response = await fetch("/feedback");
-
-          if (!response.ok) {
-            throw new Error("Failed to get feedback");
-          }
-
-          const data = await response.json();
-
-          document.getElementById("feedback").textContent = data.feedback;
-        } catch (error) {
-          console.error(error);
-        }
-      }
-
-      setInterval(updateFeedback, 100);
-    </script>
-  </body>
 </html>
