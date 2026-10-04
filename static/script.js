@@ -8,105 +8,121 @@ import {
 // ======================================================
 
 const video = document.getElementById("video");
-
 const canvas = document.getElementById("canvas");
-
 const ctx = canvas.getContext("2d");
 
 const cameraSelect = document.getElementById("camera");
-
 const startButton = document.getElementById("start-button");
-
 const stopButton = document.getElementById("stop-button");
 
 const formStatus = document.getElementById("form-status");
-
 const repCountDisplay = document.getElementById("rep-count");
-
-const angleDisplay = document.getElementById("angle");
+const ratingDisplay = document.getElementById("rating");
 
 // ======================================================
-// VARIABLES
+// STATE
 // ======================================================
 
 let stream = null;
-
 let poseLandmarker = null;
-
 let cameraRunning = false;
-
 let lastVideoTime = -1;
 
-// ======================================================
-// SQUAT VARIABLES
-// ======================================================
-
 let reps = 0;
-
 let squatState = "up";
-
-// ======================================================
-// JOINT SMOOTHING
-// ======================================================
+let lastFeedback = "";
 
 const jointHistory = {};
 
 // ======================================================
-// STARTUP
+// UI HELPERS
 // ======================================================
 
-async function initializeMediaPipe() {
-  formStatus.textContent = "Loading MediaPipe...";
+function setFeedback(message) {
+  if (message !== lastFeedback) {
+    formStatus.textContent = message;
+    lastFeedback = message;
+  }
+}
 
-  const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm",
-  );
+function setRating(value) {
+  const score = Math.max(0, Math.min(100, Math.round(value)));
+  ratingDisplay.textContent = score;
+}
 
-  poseLandmarker = await PoseLandmarker.createFromOptions(
-    vision,
-
-    {
-      baseOptions: {
-        modelAssetPath:
-          "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/latest/pose_landmarker_lite.task",
-      },
-
-      runningMode: "VIDEO",
-
-      numPoses: 1,
-
-      minPoseDetectionConfidence: 0.5,
-
-      minPosePresenceConfidence: 0.5,
-
-      minTrackingConfidence: 0.5,
-    },
-  );
-
-  formStatus.textContent = "MediaPipe ready";
-
-  console.log("MediaPipe ready");
+function resetWorkoutState() {
+  reps = 0;
+  squatState = "up";
+  repCountDisplay.textContent = "0";
+  setRating(0);
 }
 
 // ======================================================
-// FIND CAMERAS
+// MEDIAPIPE
+// ======================================================
+
+async function initializeMediaPipe() {
+  if (poseLandmarker) {
+    return;
+  }
+
+  setFeedback("Loading pose tracking...");
+
+  try {
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm",
+    );
+
+    poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "/static/pose_landmarker_lite.task",
+      },
+      runningMode: "VIDEO",
+      numPoses: 1,
+      minPoseDetectionConfidence: 0.5,
+      minPosePresenceConfidence: 0.5,
+      minTrackingConfidence: 0.5,
+    });
+
+    setFeedback("Pose tracking ready. Select a camera to start.");
+  } catch (error) {
+    console.error("MediaPipe initialization failed:", error);
+    setFeedback("Could not load pose tracking.");
+    throw error;
+  }
+}
+
+// ======================================================
+// CAMERAS
 // ======================================================
 
 async function findCameras() {
+  if (!navigator.mediaDevices?.enumerateDevices) {
+    setFeedback("This browser does not support camera selection.");
+    return;
+  }
+
   const devices = await navigator.mediaDevices.enumerateDevices();
+  const cameras = devices.filter((device) => device.kind === "videoinput");
 
   cameraSelect.innerHTML = '<option value="">Select Camera</option>';
 
-  for (const device of devices) {
-    if (device.kind === "videoinput") {
-      const option = document.createElement("option");
+  cameras.forEach((device, index) => {
+    const option = document.createElement("option");
 
-      option.value = device.deviceId;
+    option.value = device.deviceId;
+    option.textContent = device.label || `Camera ${index + 1}`;
 
-      option.textContent = device.label || `Camera ${cameraSelect.length}`;
+    cameraSelect.appendChild(option);
+  });
 
-      cameraSelect.appendChild(option);
-    }
+  if (cameras.length === 0) {
+    const option = document.createElement("option");
+
+    option.value = "";
+    option.textContent = "No camera found";
+
+    cameraSelect.appendChild(option);
   }
 }
 
@@ -115,48 +131,86 @@ async function findCameras() {
 // ======================================================
 
 async function startCamera() {
-  if (!poseLandmarker) {
-    formStatus.textContent = "MediaPipe is still loading.";
-
-    return;
-  }
-
-  if (stream) {
-    stopCamera();
-  }
-
-  const selectedCamera = cameraSelect.value;
-
-  const constraints = {
-    video: selectedCamera
-      ? {
-          deviceId: {
-            exact: selectedCamera,
-          },
-        }
-      : true,
-  };
+  startButton.disabled = true;
 
   try {
+    await initializeMediaPipe();
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      throw new Error("Camera API is unavailable.");
+    }
+
+    if (stream) {
+      stopCamera(false);
+    }
+
+    const selectedCamera = cameraSelect.value;
+
+    const constraints = {
+      video: selectedCamera
+        ? {
+            deviceId: { exact: selectedCamera },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          }
+        : {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: "user",
+          },
+      audio: false,
+    };
+
+    setFeedback("Requesting camera access...");
+
     stream = await navigator.mediaDevices.getUserMedia(constraints);
 
     video.srcObject = stream;
 
+    await new Promise((resolve) => {
+      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) {
+        resolve();
+        return;
+      }
+
+      video.addEventListener("loadedmetadata", resolve, { once: true });
+    });
+
     await video.play();
 
     cameraRunning = true;
+    lastVideoTime = -1;
 
-    canvas.width = video.videoWidth;
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
 
-    canvas.height = video.videoHeight;
+    stopButton.disabled = false;
 
-    formStatus.textContent = "Camera running";
+    await findCameras();
+
+    setFeedback("Camera running. Stand where your full body is visible.");
 
     requestAnimationFrame(processVideo);
   } catch (error) {
-    console.error(error);
+    console.error("Could not start camera:", error);
 
-    formStatus.textContent = "Could not access camera.";
+    cameraRunning = false;
+
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      stream = null;
+    }
+
+    video.srcObject = null;
+    stopButton.disabled = true;
+
+    setFeedback(
+      error.name === "NotAllowedError"
+        ? "Camera permission was denied."
+        : "Could not access the camera.",
+    );
+  } finally {
+    startButton.disabled = false;
   }
 }
 
@@ -164,47 +218,54 @@ async function startCamera() {
 // STOP CAMERA
 // ======================================================
 
-function stopCamera() {
+function stopCamera(updateMessage = true) {
   cameraRunning = false;
+  lastVideoTime = -1;
 
   if (stream) {
-    for (const track of stream.getTracks()) {
-      track.stop();
-    }
-
+    stream.getTracks().forEach((track) => track.stop());
     stream = null;
   }
 
   video.srcObject = null;
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (ctx) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
 
-  formStatus.textContent = "Camera stopped";
+  stopButton.disabled = true;
+
+  if (updateMessage) {
+    setFeedback("Camera stopped.");
+  }
 }
 
 // ======================================================
-// PROCESS WEBCAM
+// PROCESS VIDEO
 // ======================================================
 
 function processVideo() {
-  if (!cameraRunning) {
+  if (!cameraRunning || !poseLandmarker) {
     return;
   }
 
-  if (video.readyState >= 2 && video.currentTime !== lastVideoTime) {
+  if (
+    video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+    video.currentTime !== lastVideoTime
+  ) {
     lastVideoTime = video.currentTime;
 
-    const timestamp = performance.now();
+    try {
+      const result = poseLandmarker.detectForVideo(
+        video,
+        performance.now(),
+      );
 
-    poseLandmarker.detectForVideo(
-      video,
-
-      timestamp,
-
-      (result) => {
-        drawPose(result);
-      },
-    );
+      drawPose(result);
+    } catch (error) {
+      console.error("Pose detection failed:", error);
+      setFeedback("Pose tracking encountered an error.");
+    }
   }
 
   requestAnimationFrame(processVideo);
@@ -217,58 +278,54 @@ function processVideo() {
 function drawPose(result) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if (!result.landmarks || result.landmarks.length === 0) {
-    formStatus.textContent = "No person detected";
-
+  if (!result?.landmarks?.length) {
+    setRating(0);
+    setFeedback("No person detected. Step into the camera view.");
     return;
   }
 
   const pose = result.landmarks[0];
 
-  formStatus.textContent = "Person detected";
-
-  // RIGHT SIDE OF BODY
-
   const rightHip = pose[24];
-
   const rightKnee = pose[26];
-
   const rightAnkle = pose[28];
 
-  // DRAW THE IMPORTANT JOINTS
+  if (!rightHip || !rightKnee || !rightAnkle) {
+    setRating(0);
+    setFeedback("Lower-body landmarks are not visible.");
+    return;
+  }
 
-  showJoint(pose, 24, "rightHip", 10);
-
-  showJoint(pose, 26, "rightKnee", 10);
-
-  showJoint(pose, 28, "rightAnkle", 10);
-
-  // DRAW SKELETON
+  showJoint(pose, 24, "rightHip", 8);
+  showJoint(pose, 26, "rightKnee", 8);
+  showJoint(pose, 28, "rightAnkle", 8);
 
   drawLine(rightHip, rightKnee);
-
   drawLine(rightKnee, rightAnkle);
 
-  // CALCULATE KNEE ANGLE
+  const kneeAngle = calculateAngle(
+    rightHip,
+    rightKnee,
+    rightAnkle,
+  );
 
-  const kneeAngle = calculateAngle(rightHip, rightKnee, rightAnkle);
+  const score = calculateFormScore(kneeAngle);
 
-  angleDisplay.textContent = `${Math.round(kneeAngle)}°`;
-
-  // SQUAT DETECTION
+  setRating(score);
 
   checkSquat(kneeAngle);
 }
 
 // ======================================================
-// YOUR PYTHON show_joint() REPLACEMENT
+// JOINT SMOOTHING
 // ======================================================
 
-function showJoint(pose, landmark, jointName, dotSize) {
-  const joint = pose[landmark];
+function showJoint(pose, landmarkIndex, jointName, dotSize) {
+  const joint = pose[landmarkIndex];
 
-  // Create history for this joint
-  // the first time we see it.
+  if (!joint) {
+    return;
+  }
 
   if (!jointHistory[jointName]) {
     jointHistory[jointName] = [];
@@ -276,88 +333,69 @@ function showJoint(pose, landmark, jointName, dotSize) {
 
   const history = jointHistory[jointName];
 
-  // Add newest position.
-
   history.push({
     x: joint.x,
     y: joint.y,
   });
 
-  // Keep only the last 3 frames.
-
   if (history.length > 3) {
     history.shift();
   }
 
-  // Calculate the average.
-
   let averageX = 0;
-
   let averageY = 0;
 
   for (const point of history) {
     averageX += point.x;
-
     averageY += point.y;
   }
 
-  averageX = averageX / history.length;
-
-  averageY = averageY / history.length;
-
-  // Convert normalized coordinates
-  // into canvas pixel coordinates.
+  averageX /= history.length;
+  averageY /= history.length;
 
   const pixelX = averageX * canvas.width;
-
   const pixelY = averageY * canvas.height;
 
-  // Draw the joint.
-
   ctx.beginPath();
-
   ctx.arc(pixelX, pixelY, dotSize, 0, Math.PI * 2);
-
-  ctx.fillStyle = "lime";
-
+  ctx.fillStyle = "#5ca0f2";
   ctx.fill();
 }
 
 // ======================================================
-// DRAW LINE
+// DRAW SKELETON
 // ======================================================
 
 function drawLine(pointA, pointB) {
+  if (!pointA || !pointB) {
+    return;
+  }
+
   const x1 = pointA.x * canvas.width;
-
   const y1 = pointA.y * canvas.height;
-
   const x2 = pointB.x * canvas.width;
-
   const y2 = pointB.y * canvas.height;
 
   ctx.beginPath();
-
   ctx.moveTo(x1, y1);
-
   ctx.lineTo(x2, y2);
 
-  ctx.strokeStyle = "black";
-
-  ctx.lineWidth = 3;
-
+  ctx.strokeStyle = "#3f88e8";
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
   ctx.stroke();
 }
 
 // ======================================================
-// ANGLE CALCULATION
+// ANGLE / FORM SCORE
 // ======================================================
 
 function calculateAngle(a, b, c) {
-  const angle =
-    Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+  const radians =
+    Math.atan2(c.y - b.y, c.x - b.x) -
+    Math.atan2(a.y - b.y, a.x - b.x);
 
-  let degrees = Math.abs((angle * 180) / Math.PI);
+  let degrees = Math.abs((radians * 180) / Math.PI);
 
   if (degrees > 180) {
     degrees = 360 - degrees;
@@ -366,29 +404,34 @@ function calculateAngle(a, b, c) {
   return degrees;
 }
 
+function calculateFormScore(angle) {
+  // For the current squat detector, approximately 90 degrees
+  // represents the target bottom position.
+  const distanceFromTarget = Math.abs(angle - 90);
+
+  return Math.max(
+    0,
+    100 - distanceFromTarget * 1.5,
+  );
+}
+
 // ======================================================
 // SQUAT DETECTION
 // ======================================================
 
 function checkSquat(angle) {
-  // Going DOWN
-
   if (angle < 100 && squatState === "up") {
     squatState = "down";
-
-    formStatus.textContent = "Good — keep going!";
+    setFeedback("Good depth. Drive back up with control.");
+    return;
   }
 
-  // Coming back UP
-
   if (angle > 160 && squatState === "down") {
-    reps++;
-
+    reps += 1;
     squatState = "up";
 
     repCountDisplay.textContent = reps;
-
-    formStatus.textContent = "GOOD REP!";
+    setFeedback("Good rep. Keep the next one controlled.");
   }
 }
 
@@ -397,8 +440,7 @@ function checkSquat(angle) {
 // ======================================================
 
 startButton.addEventListener("click", startCamera);
-
-stopButton.addEventListener("click", stopCamera);
+stopButton.addEventListener("click", () => stopCamera(true));
 
 cameraSelect.addEventListener("change", async () => {
   if (cameraRunning) {
@@ -411,18 +453,19 @@ cameraSelect.addEventListener("change", async () => {
 // ======================================================
 
 async function initialize() {
-  await initializeMediaPipe();
+  stopButton.disabled = true;
+  setRating(0);
+  setFeedback("Loading pose tracking...");
 
   try {
-    await navigator.mediaDevices.getUserMedia({
-      video: true,
-    });
-
+    await initializeMediaPipe();
     await findCameras();
-  } catch (error) {
-    console.error(error);
 
-    formStatus.textContent = "Camera permission required.";
+    if (navigator.mediaDevices?.addEventListener) {
+      navigator.mediaDevices.addEventListener("devicechange", findCameras);
+    }
+  } catch (error) {
+    console.error("Startup failed:", error);
   }
 }
 
