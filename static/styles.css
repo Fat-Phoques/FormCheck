@@ -1,16 +1,13 @@
 :root {
   --bg: #eef3f8;
-  --card: #ffffff;
   --dark: #202832;
+  --dark-2: #182029;
   --text: #17202a;
   --muted: #718092;
-
   --blue: #2878e8;
   --blue-bright: #3d8cff;
   --blue-dark: #185fc4;
-
   --border: #dce4ed;
-
   --shadow: 0 8px 26px rgba(30, 48, 69, 0.10);
   --radius: 18px;
 }
@@ -87,30 +84,35 @@ body {
   display: grid;
 
   grid-template-columns:
-    minmax(0, 1.55fr)
-    minmax(300px, 0.85fr);
+    minmax(0, 1.6fr)
+    minmax(300px, 0.75fr);
+
+  grid-template-rows: auto 1fr;
 
   gap: 18px 22px;
 
   align-items: start;
 }
 
-/* Webcam */
+/* Camera */
 
 #video-container {
+  grid-column: 1;
+  grid-row: 1 / 3;
+
   position: relative;
 
   width: 100%;
 
   aspect-ratio: 640 / 450;
 
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 150px);
 
   overflow: hidden;
 
   border-radius: var(--radius);
 
-  background: #202832;
+  background: var(--dark);
 
   border: 1px solid #cfd9e4;
 
@@ -169,12 +171,15 @@ body {
 
   object-fit: contain;
 
-  background: #202832;
+  background: var(--dark);
 }
 
-/* Right side */
+/* Rep counter / score */
 
 #stats {
+  grid-column: 2;
+  grid-row: 1;
+
   width: 100%;
 
   margin: 0;
@@ -190,8 +195,8 @@ body {
   background:
     linear-gradient(
       145deg,
-      #202832,
-      #182029
+      var(--dark),
+      var(--dark-2)
     );
 
   border: 1px solid #303d4b;
@@ -237,14 +242,17 @@ body {
 
 #reps-label {
   grid-column: 1;
+  grid-row: 1;
 }
 
 #rating-label {
   grid-column: 2;
+  grid-row: 1;
 }
 
 #reps {
   grid-column: 1;
+  grid-row: 2;
 
   margin: 0;
 
@@ -261,6 +269,7 @@ body {
 
 #rating {
   grid-column: 2;
+  grid-row: 2;
 
   display: flex;
 
@@ -287,18 +296,24 @@ body {
   letter-spacing: -2px;
 
   color: var(--blue-bright);
+
+  text-shadow:
+    0 0 20px rgba(61, 140, 255, 0.20);
 }
 
-/* Feedback directly below stats */
+/* Feedback directly below counter */
 
 #feedback {
+  grid-column: 2;
+  grid-row: 2;
+
   width: 100%;
 
-  min-height: 125px;
+  min-height: 140px;
 
   margin: 0;
 
-  padding: 42px 22px 20px;
+  padding: 43px 22px 20px;
 
   display: flex;
 
@@ -339,7 +354,7 @@ body {
   letter-spacing: 0.10em;
 }
 
-/* Camera controls */
+/* Controls */
 
 label[for="camera"] {
   display: inline-block;
@@ -413,9 +428,11 @@ button {
     0 5px 14px rgba(40, 120, 232, 0.25);
 }
 
-#start:hover:not(:disabled),
-#end:hover:not(:disabled) {
+#start:hover:not(:disabled) {
   transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 20px rgba(40, 120, 232, 0.30);
 }
 
 #end {
@@ -428,17 +445,14 @@ button {
   border: 1px solid var(--border);
 }
 
+#end:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
 button:disabled {
   opacity: 0.55;
 
   cursor: not-allowed;
-}
-
-button:focus-visible,
-#camera:focus-visible {
-  outline: 3px solid rgba(40, 120, 232, 0.20);
-
-  outline-offset: 3px;
 }
 
 /* Responsive */
@@ -450,10 +464,24 @@ button:focus-visible,
 
   #feed-stats {
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
   }
 
   #video-container {
+    grid-column: 1;
+    grid-row: 1;
+
     max-height: none;
+  }
+
+  #stats {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #feedback {
+    grid-column: 1;
+    grid-row: 3;
   }
 }
 
@@ -478,7 +506,9 @@ button:focus-visible,
 
   #feedback {
     min-height: 110px;
+
     padding: 40px 18px 18px;
+
     font-size: 15px;
   }
 }
