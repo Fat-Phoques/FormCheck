@@ -25,11 +25,35 @@
         p {
             font-size: 1.2rem;
             color: #94a3b8;
+            margin-bottom: 24px; /* Added spacing above the button */
+        }
+        
+        /* New Button Styles matching your theme */
+        .cta-button {
+            border-radius: 8px;            /* Smooth rounded corners */
+            background-color: #38bdf8;     /* Matching your primary sky blue */
+            color: #0f172a;                /* Dark slate text for high contrast */
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: 2px solid transparent; /* Prevents shifting on hover layout */
+            cursor: pointer;
+            transition: all 0.2s ease-in-out; /* Smooth color change */
+        }
+
+        /* Hover effect that reverses the color scheme */
+        .cta-button:hover {
+            background-color: transparent;
+            color: #38bdf8;
+            border-color: #38bdf8;
         }
     </style>
 </head>
 <body>
     <h1>FormCheck.tech</h1>
     <p>Something exciting is coming soon. Stay tuned!</p>
+    
+    <!-- Added Rounded Edge Button -->
+    <button class="cta-button">Notify Me</button>
 </body>
 </html>
