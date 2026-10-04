@@ -67,14 +67,16 @@ function setFeedback(message) {
 
 function setRating(value) {
   const score = Math.max(0, Math.min(100, Math.round(value)));
-  ratingDisplay.textContent = score;
+  return score;
+  //ratingDisplay.textContent = score;
 }
 
 function resetWorkoutState() {
   reps = 0;
   squatState = "up";
   repCountDisplay.textContent = "0";
-  setRating(0);
+  score = setRating(0);
+  ratingDisplay.textContent = score;
 
   Object.keys(jointHistory).forEach((key) => {
     delete jointHistory[key];
@@ -96,7 +98,10 @@ function cameraErrorMessage(error) {
     return "The camera is already in use by another app. Close it and try again.";
   }
 
-  if (name === "OverconstrainedError" || name === "ConstraintNotSatisfiedError") {
+  if (
+    name === "OverconstrainedError" ||
+    name === "ConstraintNotSatisfiedError"
+  ) {
     return "The selected camera could not start. Try another camera or press Start Camera again.";
   }
 
@@ -137,7 +142,9 @@ async function initializeMediaPipe() {
           `${packageUrl}/vision_bundle.mjs`
         );
 
-        const vision = await FilesetResolver.forVisionTasks(`${packageUrl}/wasm`);
+        const vision = await FilesetResolver.forVisionTasks(
+          `${packageUrl}/wasm`,
+        );
 
         poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: {
@@ -165,7 +172,9 @@ async function initializeMediaPipe() {
     if (cameraRunning) {
       setFeedback("Camera running. Stand where your full body is visible.");
     } else {
-      setFeedback("Pose tracking ready. Select a camera or press Start Camera.");
+      setFeedback(
+        "Pose tracking ready. Select a camera or press Start Camera.",
+      );
     }
   } catch (error) {
     console.error("MediaPipe initialization failed:", error);
@@ -236,7 +245,11 @@ function preferredCameraId(cameras) {
       if (/android|droidcam|obs|virtual|iriun|epoccam/.test(value)) {
         return 0;
       }
-      if (/integrated|built-?in|facetime|vga|laptop|internal|hd webcam/.test(value)) {
+      if (
+        /integrated|built-?in|facetime|vga|laptop|internal|hd webcam/.test(
+          value,
+        )
+      ) {
         return 2;
       }
       return 1;
@@ -299,7 +312,10 @@ async function requestCameraStream(deviceId) {
     } catch (error) {
       lastError = error;
 
-      if (error?.name === "NotAllowedError" || error?.name === "SecurityError") {
+      if (
+        error?.name === "NotAllowedError" ||
+        error?.name === "SecurityError"
+      ) {
         throw error;
       }
     }
@@ -457,7 +473,10 @@ function processVideo() {
     return;
   }
 
-  if (poseLandmarker && video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+  if (
+    poseLandmarker &&
+    video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA
+  ) {
     if (video.currentTime !== lastVideoTime) {
       lastVideoTime = video.currentTime;
       syncCanvasToVideo();
@@ -499,8 +518,14 @@ function pickLeg(pose) {
   const right = [pose[RIGHT_HIP], pose[RIGHT_KNEE], pose[RIGHT_ANKLE]];
   const left = [pose[LEFT_HIP], pose[LEFT_KNEE], pose[LEFT_ANKLE]];
 
-  const rightScore = right.reduce((total, joint) => total + landmarkScore(joint), 0);
-  const leftScore = left.reduce((total, joint) => total + landmarkScore(joint), 0);
+  const rightScore = right.reduce(
+    (total, joint) => total + landmarkScore(joint),
+    0,
+  );
+  const leftScore = left.reduce(
+    (total, joint) => total + landmarkScore(joint),
+    0,
+  );
 
   if (Math.min(...right.map(landmarkScore)) >= 0.4 && rightScore >= leftScore) {
     return {
@@ -529,7 +554,9 @@ function drawPose(result) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (!result?.landmarks?.length) {
-    setRating(0);
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+
     setFeedback("No person detected. Step into the camera view.");
     return;
   }
@@ -538,8 +565,12 @@ function drawPose(result) {
   const leg = pickLeg(pose);
 
   if (!leg) {
-    setRating(0);
-    setFeedback("Lower-body landmarks are not visible. Step back so hips and knees are in frame.");
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+
+    setFeedback(
+      "Lower-body landmarks are not visible. Step back so hips and knees are in frame.",
+    );
     return;
   }
 
@@ -551,7 +582,8 @@ function drawPose(result) {
   drawLine(leg.knee, leg.ankle);
 
   const kneeAngle = calculateAngle(leg.hip, leg.knee, leg.ankle);
-  setRating(calculateFormScore(kneeAngle));
+  score = setRating(calculateFormScore(kneeAngle));
+  ratingDisplay.textContent = score;
   checkSquat(kneeAngle);
 }
 
@@ -631,8 +663,7 @@ function drawLine(pointA, pointB) {
 
 function calculateAngle(a, b, c) {
   const radians =
-    Math.atan2(c.y - b.y, c.x - b.x) -
-    Math.atan2(a.y - b.y, a.x - b.x);
+    Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
 
   let degrees = Math.abs((radians * 180) / Math.PI);
 
@@ -644,8 +675,8 @@ function calculateAngle(a, b, c) {
 }
 
 function calculateFormScore(angle) {
-  if (angle >= 150) {
-    return 100;
+  if (angle >= 160) {
+    return 0;
   }
 
   const distanceFromTarget = Math.abs(angle - 90);
@@ -695,7 +726,9 @@ cameraSelect.addEventListener("change", async () => {
 
 async function initialize() {
   stopButton.disabled = true;
-  setRating(0);
+  score = setRating(0);
+  ratingDisplay.textContent = score;
+
 
   if (!window.isSecureContext) {
     setFeedback(
