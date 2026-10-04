@@ -41,6 +41,12 @@ const LEFT_ANKLE = 27;
 const RIGHT_HIP = 24;
 const RIGHT_KNEE = 26;
 const RIGHT_ANKLE = 28;
+const LEFT_SHOULDER = 11;
+const LEFT_ELBOW = 13;
+const LEFT_WRIST = 15;
+const RIGHT_SHOULDER = 12;
+const RIGHT_ELBOW = 14;
+const RIGHT_WRIST = 16;
 
 let stream = null;
 let poseLandmarker = null;
@@ -51,6 +57,7 @@ let startingCamera = false;
 
 let reps = 0;
 let squatState = "up";
+let bicepState = "up";
 let currentExercise = "squats";
 let score = 0;
 let lastFeedback = "";
@@ -78,6 +85,7 @@ function setRating(value) {
 function resetWorkoutState() {
   reps = 0;
   squatState = "up";
+  bicepState = "up";
   score = setRating(0);
   repCountDisplay.textContent = "0";
   ratingDisplay.textContent = score;
@@ -555,6 +563,50 @@ function pickLeg(pose) {
   return null;
 }
 
+function pickArm(pose) {
+  const right = [
+    pose[RIGHT_SHOULDER],
+    pose[RIGHT_ELBOW],
+    pose[RIGHT_WRIST],
+  ];
+  const left = [
+    pose[LEFT_SHOULDER],
+    pose[LEFT_ELBOW],
+    pose[LEFT_WRIST],
+  ];
+
+  const rightScore = right.reduce(
+    (total, joint) => total + landmarkScore(joint),
+    0,
+  );
+  const leftScore = left.reduce(
+    (total, joint) => total + landmarkScore(joint),
+    0,
+  );
+
+  if (Math.min(...right.map(landmarkScore)) >= 0.4 && rightScore >= leftScore) {
+    return {
+      shoulder: right[0],
+      elbow: right[1],
+      wrist: right[2],
+      names: ["rightShoulder", "rightElbow", "rightWrist"],
+      indexes: [RIGHT_SHOULDER, RIGHT_ELBOW, RIGHT_WRIST],
+    };
+  }
+
+  if (Math.min(...left.map(landmarkScore)) >= 0.4) {
+    return {
+      shoulder: left[0],
+      elbow: left[1],
+      wrist: left[2],
+      names: ["leftShoulder", "leftElbow", "leftWrist"],
+      indexes: [LEFT_SHOULDER, LEFT_ELBOW, LEFT_WRIST],
+    };
+  }
+
+  return null;
+}
+
 function drawPose(result) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -567,31 +619,58 @@ function drawPose(result) {
   }
 
   const pose = result.landmarks[0];
-  const leg = pickLeg(pose);
 
-  if (!leg) {
-    score = setRating(0);
-    ratingDisplay.textContent = score;
+  if (currentExercise === "squats") {
+    const leg = pickLeg(pose);
 
-    setFeedback(
-      "Lower-body landmarks are not visible. Step back so hips and knees are in frame.",
-    );
+    if (!leg) {
+      score = setRating(0);
+      ratingDisplay.textContent = score;
+
+      setFeedback(
+        "Lower-body landmarks are not visible. Step back so hips and knees are in frame.",
+      );
+      return;
+    }
+
+    showJoint(pose, leg.indexes[0], leg.names[0], 8);
+    showJoint(pose, leg.indexes[1], leg.names[1], 8);
+    showJoint(pose, leg.indexes[2], leg.names[2], 8);
+
+    drawLine(leg.hip, leg.knee);
+    drawLine(leg.knee, leg.ankle);
+
+    const kneeAngle = calculateAngle(leg.hip, leg.knee, leg.ankle);
+    squats(kneeAngle);
     return;
   }
 
-  showJoint(pose, leg.indexes[0], leg.names[0], 8);
-  showJoint(pose, leg.indexes[1], leg.names[1], 8);
-  showJoint(pose, leg.indexes[2], leg.names[2], 8);
+  if (currentExercise === "bicepCurls") {
+    const arm = pickArm(pose);
 
-  drawLine(leg.hip, leg.knee);
-  drawLine(leg.knee, leg.ankle);
+    if (!arm) {
+      score = setRating(0);
+      ratingDisplay.textContent = score;
 
-  const kneeAngle = calculateAngle(leg.hip, leg.knee, leg.ankle);
-  if (currentExercise === "squats") {
-    squats(kneeAngle);
-  } else {
-    score = setRating(0);
-    ratingDisplay.textContent = score;
+      setFeedback(
+        "Arm landmarks are not visible. Turn slightly sideways so your shoulder, elbow, and wrist are in frame.",
+      );
+      return;
+    }
+
+    showJoint(pose, arm.indexes[0], arm.names[0], 8);
+    showJoint(pose, arm.indexes[1], arm.names[1], 8);
+    showJoint(pose, arm.indexes[2], arm.names[2], 8);
+
+    drawLine(arm.shoulder, arm.elbow);
+    drawLine(arm.elbow, arm.wrist);
+
+    const elbowAngle = calculateAngle(
+      arm.shoulder,
+      arm.elbow,
+      arm.wrist,
+    );
+    bicepCurls(elbowAngle);
   }
 }
 
@@ -682,12 +761,8 @@ function calculateAngle(a, b, c) {
   return degrees;
 }
 
-function calculateFormScore(angle) {
-  if (angle >= 160) {
-    return 0;
-  }
-
-  const distanceFromTarget = Math.abs(angle - 90);
+function calculateFormScore(angle, targetAngle = 90) {
+  const distanceFromTarget = Math.abs(angle - targetAngle);
   return Math.max(0, 100 - distanceFromTarget * 1.5);
 }
 
@@ -696,10 +771,9 @@ function calculateFormScore(angle) {
 // ======================================================
 
 function squats(angle) {
-  // The rating is only shown while the user is performing the squat.
-  // Once the user completes the rep and stands back up, the rating resets to 0.
-  if (squatState === "down") {
-    score = setRating(calculateFormScore(angle));
+  // Start showing the rating as soon as the knee angle goes below 165 degrees.
+  if (angle < 165) {
+    score = setRating(calculateFormScore(angle, 90));
     ratingDisplay.textContent = score;
   } else {
     score = setRating(0);
@@ -717,7 +791,6 @@ function squats(angle) {
     squatState = "up";
     repCountDisplay.textContent = String(reps);
 
-    // Rep is complete, so reset the current form score.
     score = setRating(0);
     ratingDisplay.textContent = score;
 
@@ -727,6 +800,39 @@ function squats(angle) {
 
   if (squatState === "up" && !lastFeedback.startsWith("Good")) {
     setFeedback("Stand tall, then squat until the knees bend near 90 degrees.");
+  }
+}
+
+function bicepCurls(angle) {
+  // Start showing the rating as soon as the elbow angle goes below 165 degrees.
+  if (angle < 165) {
+    score = setRating(calculateFormScore(angle, 60));
+    ratingDisplay.textContent = score;
+  } else {
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+  }
+
+  if (angle < 70 && bicepState === "up") {
+    bicepState = "down";
+    setFeedback("Good curl. Lower the weight with control.");
+    return;
+  }
+
+  if (angle > 165 && bicepState === "down") {
+    reps += 1;
+    bicepState = "up";
+    repCountDisplay.textContent = String(reps);
+
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+
+    setFeedback("Good rep. Keep the next one controlled.");
+    return;
+  }
+
+  if (bicepState === "up" && !lastFeedback.startsWith("Good")) {
+    setFeedback("Start with your arm extended, then curl your hand toward your shoulder.");
   }
 }
 
@@ -750,7 +856,7 @@ bicepCurlsButton.addEventListener("click", () => {
   bicepCurlsButton.classList.add("active");
   squatsButton.classList.remove("active");
   resetWorkoutState();
-  setFeedback("Bicep Curls selected. Exercise tracking is not available yet.");
+  setFeedback("Bicep Curls selected. Turn slightly sideways and press Start Camera.");
 });
 
 cameraSelect.addEventListener("change", async () => {
