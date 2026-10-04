@@ -156,6 +156,42 @@ body > h1::after {
   background: transparent;
 }
 
+/* Exercise selector */
+
+#exercise-controls {
+  width: min(1280px, 100%);
+  margin: 0 auto 14px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+#exercise-controls button {
+  min-width: 140px;
+
+  color: #b4bfcc;
+  background: transparent;
+  border-color: var(--border-light);
+}
+
+#exercise-controls button:hover:not(:disabled) {
+  color: #eef3f8;
+  background: #1b2531;
+}
+
+#exercise-controls button.active {
+  color: #ffffff;
+  background: var(--blue);
+  border-color: var(--blue);
+}
+
+#exercise-controls button.active:hover:not(:disabled) {
+  background: var(--blue-light);
+  border-color: var(--blue-light);
+}
+
 /* Camera controls */
 
 #camera-controls {
@@ -403,6 +439,10 @@ select:focus-visible {
     aspect-ratio: 4 / 3;
     min-height: 0;
     max-height: none;
+  }
+
+  #exercise-controls {
+    flex-wrap: wrap;
   }
 
   #camera-controls {
