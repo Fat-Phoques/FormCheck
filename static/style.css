@@ -142,17 +142,18 @@ body > h1::after {
 
   object-fit: contain;
   object-position: center;
-
-  background: #080c12;
 }
 
 #video {
   z-index: 0;
+  background: #080c12;
+  transform: translateZ(0);
 }
 
 #canvas {
   z-index: 1;
   pointer-events: none;
+  background: transparent;
 }
 
 /* Camera controls */

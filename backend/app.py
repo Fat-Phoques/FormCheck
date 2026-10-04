@@ -14,7 +14,8 @@ app = Flask(
 )
 
 
-DATABASE = os.path.join(BASE_DIR, "instance", "formcheck.db")
+INSTANCE_DIR = os.path.join(BASE_DIR, "instance")
+DATABASE = os.path.join(INSTANCE_DIR, "formcheck.db")
 
 
 def get_database():
@@ -24,7 +25,7 @@ def get_database():
 
 
 def initialize_database():
-    os.makedirs("instance", exist_ok=True)
+    os.makedirs(INSTANCE_DIR, exist_ok=True)
 
     connection = get_database()
 
@@ -46,6 +47,12 @@ def initialize_database():
 
 
 initialize_database()
+
+
+@app.after_request
+def add_camera_headers(response):
+    response.headers["Permissions-Policy"] = "camera=(self), microphone=()"
+    return response
 
 
 @app.route("/")
