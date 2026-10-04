@@ -66,6 +66,9 @@ def show_joint(pose, landmark, frame, dot_size, bgr_color):
     joint_x_avg = joint_x_avg / len(joint_history)
     joint_y_avg = joint_y_avg / len(joint_history)
 
+    joint_x_avg = joint_x_avg * 0.5 + joint.x * 0.5
+    joint_y_avg = joint_y_avg * 0.5 + joint.y * 0.5
+
 
     joint_px_x = int(frame.shape[1] * joint_x_avg)
     joint_px_y = int(frame.shape[0] * joint_y_avg)

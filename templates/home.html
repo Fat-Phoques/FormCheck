@@ -7,60 +7,139 @@
 
     <title>FormCheck</title>
   </head>
+
   <body>
-    <h1>FormCheck.ai</h1>
-    <div id="video-container">
-      <img id="feed" />
+    <h1 id="title">FormCheck.ai</h1>
+
+    <div id="feed-stats">
+      <div id="video-container">
+        <img id="feed" />
+      </div>
+
+      <div id="stats">
+        <label id="reps-label" for="reps">Reps</label>
+        <h1 id="reps">{{reps}}</h1>
+
+        <label id="rating-label" for="rating">Form Score</label>
+        <h2 id="rating">
+          <span id="score">{{score}}</span>/100
+        </h2>
+      </div>
+
+      <div id="feedback">
+        Waiting for feedback...
+      </div>
     </div>
 
     <label for="camera">Camera</label>
+
     <select id="camera" onclick="selectCamera()">
-      {% if cameras %} {% for camera in cameras %}
-      <option value="{{ camera }}">Camera {{ camera }}</option>
-      {% endfor %} {% else %}
-      <option>No camera found</option>
+      {% if cameras %}
+        {% for camera in cameras %}
+          <option value="{{ camera }}">Camera {{ camera }}</option>
+        {% endfor %}
+      {% else %}
+        <option>No camera found</option>
       {% endif %}
     </select>
 
     <button id="end" onclick="stopCamera()">END</button>
     <button id="start" onclick="startCamera()">START</button>
+
+    <script>
+      function selectCamera() {
+        const camera = document.getElementById("camera").value;
+
+        fetch("/select_camera", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            camera: camera,
+          }),
+        });
+      }
+
+      async function startCamera() {
+        const startBtn = document.getElementById("start");
+        const endBtn = document.getElementById("end");
+        const feed = document.getElementById("feed");
+
+        startBtn.innerText = "LOADING";
+        startBtn.disabled = true;
+
+        try {
+          const response = await fetch("/start_camera", {
+            method: "POST",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to start camera");
+          }
+
+          feed.src = "/video_feed";
+
+          startBtn.innerText = "START";
+          startBtn.disabled = false;
+
+          endBtn.disabled = false;
+        } catch (error) {
+          console.error(error);
+
+          startBtn.innerText = "START";
+          startBtn.disabled = false;
+        }
+      }
+
+      async function stopCamera() {
+        const startBtn = document.getElementById("start");
+        const endBtn = document.getElementById("end");
+        const feed = document.getElementById("feed");
+
+        endBtn.innerText = "LOADING";
+        endBtn.disabled = true;
+
+        try {
+          const response = await fetch("/stop_camera", {
+            method: "POST",
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to stop camera");
+          }
+
+          feed.src = "";
+
+          endBtn.innerText = "END";
+          endBtn.disabled = false;
+
+          startBtn.disabled = false;
+        } catch (error) {
+          console.error(error);
+
+          endBtn.innerText = "END";
+          endBtn.disabled = false;
+        }
+      }
+
+      async function updateFeedback() {
+        try {
+          const response = await fetch("/feedback");
+
+          if (!response.ok) {
+            throw new Error("Failed to get feedback");
+          }
+
+          const data = await response.json();
+
+          document.getElementById("feedback").textContent = data.feedback;
+        } catch (error) {
+          console.error(error);
+        }
+      }
+
+      setInterval(updateFeedback, 100);
+    </script>
   </body>
-
-  <script>
-    function selectCamera() {
-      const camera = document.getElementById("camera").value;
-
-      fetch("/select_camera", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          camera: camera,
-        }),
-      });
-    }
-
-    function startCamera() {
-      fetch("/start_camera", {
-        method: "POST",
-      });
-
-      const startBtn = document.getElementById("start");
-      const feed = document.getElementById("feed");
-      feed.src = "/video_feed";
-      startBtn.innerText = "LOADING";
-    }
-
-    function stopCamera() {
-      const stopBtn = document.getElementById("end");
-      const feed = document.getElementById("feed");
-      feed.src = "";
-      stopBtn.innerText = "LOADING";
-
-      fetch("/stop_camera", {
-        method: "POST",
-      });
-    }
-  </script>
 </html>
