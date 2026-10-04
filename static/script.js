@@ -776,9 +776,13 @@ function updateRepScore(angle, targetAngle) {
     return;
   }
 
-  // Use the current angle for the rating so one noisy frame
-  // cannot permanently lock in an unrealistically high score.
-  score = setRating(calculateFormScore(angle, targetAngle));
+  // Keep the best score reached during the current rep.
+  // This stops the rating from dropping on the way back up
+  // or from dropping if the user goes slightly deeper than the target.
+  const newScore = setRating(calculateFormScore(angle, targetAngle));
+  repBestScore = Math.max(repBestScore, newScore);
+
+  score = repBestScore;
   ratingDisplay.textContent = score;
 }
 
