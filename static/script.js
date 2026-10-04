@@ -60,6 +60,7 @@ let squatState = "up";
 let bicepState = "up";
 let currentExercise = "squats";
 let score = 0;
+let repBestScore = 0;
 let lastFeedback = "";
 let poseLoading = false;
 
@@ -87,6 +88,7 @@ function resetWorkoutState() {
   squatState = "up";
   bicepState = "up";
   score = setRating(0);
+  repBestScore = 0;
   repCountDisplay.textContent = "0";
   ratingDisplay.textContent = score;
   lastFeedback = "";
@@ -766,19 +768,30 @@ function calculateFormScore(angle, targetAngle = 90) {
   return Math.max(0, 100 - distanceFromTarget * 1.5);
 }
 
+function updateRepScore(angle, targetAngle) {
+  // The rating starts below 165 degrees.
+  if (angle >= 165) {
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+    return;
+  }
+
+  // Keep the best score reached during the current rep.
+  // This stops the rating from dropping on the way back up
+  // or from dropping if the user goes slightly deeper than the target.
+  const newScore = setRating(calculateFormScore(angle, targetAngle));
+  repBestScore = Math.max(repBestScore, newScore);
+
+  score = repBestScore;
+  ratingDisplay.textContent = score;
+}
+
 // ======================================================
 // SQUAT DETECTION
 // ======================================================
 
 function squats(angle) {
-  // Start showing the rating as soon as the knee angle goes below 165 degrees.
-  if (angle < 165) {
-    score = setRating(calculateFormScore(angle, 90));
-    ratingDisplay.textContent = score;
-  } else {
-    score = setRating(0);
-    ratingDisplay.textContent = score;
-  }
+  updateRepScore(angle, 90);
 
   if (angle < 100 && squatState === "up") {
     squatState = "down";
@@ -792,6 +805,7 @@ function squats(angle) {
     repCountDisplay.textContent = String(reps);
 
     score = setRating(0);
+    repBestScore = 0;
     ratingDisplay.textContent = score;
 
     setFeedback("Good rep. Keep the next one controlled.");
@@ -804,14 +818,7 @@ function squats(angle) {
 }
 
 function bicepCurls(angle) {
-  // Start showing the rating as soon as the elbow angle goes below 165 degrees.
-  if (angle < 165) {
-    score = setRating(calculateFormScore(angle, 60));
-    ratingDisplay.textContent = score;
-  } else {
-    score = setRating(0);
-    ratingDisplay.textContent = score;
-  }
+  updateRepScore(angle, 60);
 
   if (angle < 70 && bicepState === "up") {
     bicepState = "down";
