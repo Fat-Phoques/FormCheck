@@ -493,3 +493,90 @@ select:focus-visible {
     font-size: 42px;
   }
 }
+
+/* ======================================================
+   LARGE DESKTOP UI
+   Only applies to large PC screens. Existing mobile and
+   tablet formatting remains unchanged.
+   ====================================================== */
+
+@media (min-width: 1360px) {
+  body {
+    width: min(1360px, 100%);
+    margin: 0 auto;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto;
+    column-gap: 22px;
+    row-gap: 14px;
+
+    align-items: start;
+  }
+
+  body > h1 {
+    grid-column: 1 / -1;
+    grid-row: 1;
+
+    width: 100%;
+    margin: 0;
+  }
+
+  #exercise-controls {
+    grid-column: 1 / -1;
+    grid-row: 2;
+
+    width: 100%;
+    margin: 0;
+  }
+
+  #video-container {
+    grid-column: 1;
+    grid-row: 3 / 6;
+
+    width: 640px;
+    height: 450px;
+    min-height: 450px;
+    max-height: 450px;
+
+    margin: 0;
+    aspect-ratio: auto;
+
+    justify-self: start;
+  }
+
+  #video,
+  #canvas {
+    width: 640px;
+    height: 450px;
+  }
+
+  #camera-controls {
+    grid-column: 1;
+    grid-row: 6;
+
+    width: 640px;
+    margin: 0;
+
+    justify-self: start;
+  }
+
+  #stats {
+    grid-column: 2;
+    grid-row: 3;
+
+    width: 100%;
+    margin: 0;
+  }
+
+  #form-status {
+    grid-column: 2;
+    grid-row: 4 / 7;
+
+    width: 100%;
+    min-height: 0;
+    margin: 0;
+
+    align-self: stretch;
+  }
+}
