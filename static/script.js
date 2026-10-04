@@ -88,6 +88,9 @@ async function initializeMediaPipe() {
 
     if (cameraRunning) {
       setFeedback("Camera running. Pose tracking ready.");
+      if (!animationFrame) {
+        animationFrame = requestAnimationFrame(processVideo);
+      }
     } else {
       setFeedback("Pose tracking ready. Select a camera to start.");
     }
@@ -268,7 +271,12 @@ function stopCamera(updateMessage = true) {
 // ======================================================
 
 function processVideo() {
-  if (!cameraRunning || !poseLandmarker) {
+  if (!cameraRunning) {
+    return;
+  }
+
+  if (!poseLandmarker) {
+    animationFrame = requestAnimationFrame(processVideo);
     return;
   }
 
@@ -478,7 +486,12 @@ cameraSelect.addEventListener("change", async () => {
 async function initialize() {
   stopButton.disabled = true;
   setRating(0);
-  setFeedback("Camera ready. Select a camera or press Start Camera.");
+
+  if (!window.isSecureContext) {
+    setFeedback("Camera requires HTTPS. Open the secure https:// version of the site.");
+  } else {
+    setFeedback("Camera ready. Select a camera or press Start Camera.");
+  }
 
   try {
     await findCameras();
