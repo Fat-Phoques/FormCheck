@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="../static/styles.css" />
 
-    <title>FormCheck.ai</title>
+    <title>FormCheck</title>
   </head>
   <body>
     <h1>FormCheck.ai</h1>
@@ -49,12 +49,7 @@
       const startBtn = document.getElementById("start");
       const feed = document.getElementById("feed");
       feed.src = "/video_feed";
-      if(feed.clientWidth < 100){
-        startBtn.innerText = "LOADING";
-    } else {
-        startBtn.innerText = "START"
-    }
-      
+      startBtn.innerText = "LOADING";
     }
 
     function stopCamera() {
