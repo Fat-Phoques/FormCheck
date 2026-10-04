@@ -1,150 +1,599 @@
+:root {
+  --background: #f4f7f5;
+  --card: #ffffff;
+  --card-soft: #f8fbf9;
+
+  --text: #18231d;
+  --muted: #718078;
+
+  --green: #45a86b;
+  --green-dark: #318b55;
+  --green-soft: #e3f4e9;
+
+  --blue-soft: #e8f1fb;
+
+  --border: #e1e9e4;
+
+  --shadow:
+    0 8px 30px rgba(32, 59, 43, 0.08);
+
+  --shadow-hover:
+    0 14px 36px rgba(32, 59, 43, 0.12);
+
+  --radius: 20px;
+}
+
+
+/* ================================
+   PAGE
+   ================================ */
+
+* {
+  box-sizing: border-box;
+}
+
 html {
-  font-family: Arial, Helvetica, sans-serif;
-  background-color: rgba(210, 215, 220);
+  min-height: 100%;
+
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  color: var(--text);
+
+  background:
+    radial-gradient(
+      circle at 8% 5%,
+      rgba(69, 168, 107, 0.10),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 92% 8%,
+      rgba(100, 153, 225, 0.09),
+      transparent 25%
+    ),
+    var(--background);
 }
 
-#video-container {
-  margin: 20px;
-  margin-inline: 50px;
-  width: 640px;
-  height: 450px;
-  border-radius: 20px;
-  background-color: rgb(18, 26, 43);
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  padding-top: 28px;
 }
 
-#feed {
-  border-radius: 20px;
-}
 
-button {
-  border-style: none;
-  background-color: rgb(58, 71, 255);
-  color: white;
-  height: 48px;
-  padding: 12px;
-  padding-inline: 24px;
-  border-radius: 16px;
-  font-weight: 700;
-  font-size: 16px;
-  transition:
-    box-shadow 0.2s,
-    padding 0.2s;
-}
-
-button:hover {
-  box-shadow: 0px 5px 8px rgba(0, 0, 0, 0.25);
-  padding: 14px;
-  padding-inline: 24px;
-}
-
-#end {
-  margin-left: 215px;
-}
-
-#start {
-  margin-left: 20px;
-}
-
-#camera {
-  padding: 12px;
-  padding-inline: 24px;
-  font-weight: 500;
-  font-size: 14px;
-  color: rgb(102, 112, 133);
-  height: 40px;
-  border: 0;
-  border-radius: 14px;
-}
-
-label {
-  color: rgb(102, 112, 133);
-  font-weight: 500;
-  font-size: 14px;
-  margin-right: 8px;
-  margin-left: 60px;
-}
+/* ================================
+   TITLE
+   ================================ */
 
 #title {
-  font-weight: 900;
-  margin-inline-start: 50px;
+  margin: 0 0 22px 50px;
+
+  font-size: 38px;
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: -1.5px;
+
+  color: var(--text);
 }
 
-#stats {
-  grid-column: 2;
-  grid-row: 1;
-  background-color: white;
-  margin-inline-end: 50px;
-  margin: 20px;
-  border-radius: 16px;
-  height: min-content;
+#title::after {
+  content: "";
+
+  display: inline-block;
+
+  width: 9px;
+  height: 9px;
+
+  margin-left: 7px;
+
+  vertical-align: 7px;
+
+  border-radius: 50%;
+
+  background: var(--green);
 }
+
+
+/* ================================
+   MAIN LAYOUT
+   ================================ */
 
 #feed-stats {
   display: grid;
-  grid-auto-flow: column;
-  column-gap: 20px;
-  grid-template-columns: 50% auto;
+
+  grid-template-columns:
+    minmax(500px, 640px)
+    minmax(320px, 500px);
+
+  grid-template-rows: auto auto;
+
+  column-gap: 24px;
+  row-gap: 18px;
+
+  align-items: start;
+
+  margin: 0 50px;
 }
 
-#reps {
-  font-weight: 900;
-  font-size: 25px;
-  margin: 10px;
+
+/* ================================
+   CAMERA
+   ================================ */
+
+#video-container {
+  position: relative;
+
+  width: 100%;
+  height: 450px;
+
+  margin: 0;
+
+  overflow: hidden;
+
+  border-radius: var(--radius);
+
+  background:
+    linear-gradient(
+      145deg,
+      #e8f2eb,
+      #f7faf8
+    );
+
+  border: 1px solid var(--border);
+
+  box-shadow: var(--shadow);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
-span {
-  font-size: 25px;
-  font-weight: 900;
-  margin: 10px;
-  margin-top: 10px;
-  margin-bottom: 10px;
-  color: black;
+#video-container:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
 }
+
+#feed {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  border-radius: var(--radius);
+}
+
+
+/* ================================
+   STATS CARD
+   ================================ */
 
 #stats {
-  width: 500px;
+  grid-column: 2;
+  grid-row: 1;
+
+  width: 100%;
   height: fit-content;
-  padding: 20px;
+
+  margin: 0;
+  padding: 26px;
+
   display: grid;
-  grid-auto-flow: column;
-  grid-template-columns: auto auto;
+
+  grid-template-columns: 1fr 1fr;
+
+  column-gap: 20px;
+  row-gap: 4px;
+
+  background: rgba(255, 255, 255, 0.94);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius);
+
+  box-shadow: var(--shadow);
+
+  backdrop-filter: blur(12px);
 }
 
+
+/* ================================
+   STAT LABELS
+   ================================ */
+
+#reps-label,
 #rating-label {
-  margin-top: 25px;
-  margin-inline-start: 20px;
-}
+  margin: 0 0 4px 0;
 
-#rating {
-  font-size: 15px;
-  margin-inline: 10px;
-  margin: 10px;
-  font-weight: 500;
-  color: rgb(102, 112, 133);
+  color: var(--muted);
+
+  font-size: 12px;
+
+  font-weight: 750;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.08em;
 }
 
 #reps-label {
-  margin-top: 25px;
-  margin-left: 20px;
+  grid-column: 1;
+  grid-row: 1;
 }
 
-#feedback {
-  z-index: 2;
+#rating-label {
   grid-column: 2;
   grid-row: 1;
-  width: 500px;
-  margin-left: 20px;
-  height: fit-content;
+}
 
-  background-color: white;
-  border-radius: 16px;
 
-  margin-top: 137px;
-  padding: 20px;
+/* ================================
+   REP COUNT
+   ================================ */
 
-  font-size: 18px;
+#reps {
+  grid-column: 1;
+  grid-row: 2;
+
+  margin: 0;
+
+  font-size: 42px;
+
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: -1.5px;
+
+  color: var(--text);
+}
+
+
+/* ================================
+   FORM SCORE
+   ================================ */
+
+#rating {
+  grid-column: 2;
+  grid-row: 2;
+
+  display: flex;
+  align-items: baseline;
+
+  margin: 0;
+
+  font-size: 17px;
+
   font-weight: 700;
-  color: rgb(18, 26, 43);
 
-  display: grid;
+  color: var(--muted);
+}
+
+#score {
+  margin: 0 5px 0 0;
+
+  font-size: 42px;
+
+  line-height: 1;
+
+  font-weight: 850;
+
+  letter-spacing: -1.5px;
+
+  color: var(--green-dark);
+}
+
+
+/* ================================
+   FEEDBACK
+   ================================ */
+
+#feedback {
+  grid-column: 2;
+  grid-row: 2;
+
+  width: 100%;
+
+  min-height: 105px;
+
+  margin: 0;
+
+  padding: 22px 24px;
+
+  display: flex;
+  align-items: center;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--green-soft),
+      #f5faf6
+    );
+
+  border: 1px solid #d6eadc;
+
+  border-radius: var(--radius);
+
+  box-shadow: 0 6px 20px rgba(44, 95, 61, 0.06);
+
+  font-size: 16px;
+
+  line-height: 1.45;
+
+  font-weight: 650;
+
+  color: var(--text);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+#feedback:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 26px rgba(44, 95, 61, 0.10);
+}
+
+
+/* ================================
+   CAMERA CONTROLS
+   ================================ */
+
+label[for="camera"] {
+  display: inline-block;
+
+  margin-top: 22px;
+  margin-left: 50px;
+  margin-right: 8px;
+
+  color: var(--muted);
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.06em;
+}
+
+#camera {
+  height: 42px;
+
+  padding: 8px 16px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
+
+  background: white;
+
+  color: var(--text);
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  outline: none;
+
+  box-shadow:
+    0 3px 10px rgba(32, 59, 43, 0.05);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+#camera:hover {
+  border-color: #b9d6c2;
+}
+
+#camera:focus {
+  border-color: var(--green);
+
+  box-shadow:
+    0 0 0 4px rgba(69, 168, 107, 0.12);
+}
+
+
+/* ================================
+   BUTTONS
+   ================================ */
+
+button {
+  height: 44px;
+
+  padding: 0 22px;
+
+  border: none;
+
+  border-radius: 13px;
+
+  font-family: inherit;
+
+  font-size: 14px;
+
+  font-weight: 750;
+
+  letter-spacing: 0.01em;
+
+  cursor: pointer;
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease,
+    opacity 0.18s ease;
+}
+
+
+/* START */
+
+#start {
+  margin-left: 18px;
+
+  color: white;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--green),
+      var(--green-dark)
+    );
+
+  box-shadow:
+    0 5px 14px rgba(69, 168, 107, 0.22);
+}
+
+#start:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 9px 20px rgba(69, 168, 107, 0.28);
+}
+
+
+/* END */
+
+#end {
+  margin-left: 10px;
+
+  color: #68756d;
+
+  background: white;
+
+  border: 1px solid var(--border);
+
+  box-shadow:
+    0 3px 10px rgba(32, 59, 43, 0.05);
+}
+
+#end:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  color: #4e5b53;
+
+  border-color: #cbd9d0;
+
+  box-shadow:
+    0 7px 16px rgba(32, 59, 43, 0.08);
+}
+
+
+/* DISABLED BUTTONS */
+
+button:disabled {
+  opacity: 0.55;
+
+  cursor: not-allowed;
+
+  transform: none;
+
+  box-shadow: none;
+}
+
+
+/* ================================
+   ACCESSIBILITY
+   ================================ */
+
+button:focus-visible,
+#camera:focus-visible {
+  outline: 3px solid rgba(69, 168, 107, 0.22);
+
+  outline-offset: 3px;
+}
+
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+
+@media (max-width: 1000px) {
+  #feed-stats {
+    grid-template-columns: 1fr;
+
+    margin: 0 25px;
+  }
+
+  #video-container {
+    height: auto;
+
+    aspect-ratio: 640 / 450;
+  }
+
+  #stats {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #feedback {
+    grid-column: 1;
+    grid-row: 3;
+  }
+
+  #title {
+    margin-left: 25px;
+  }
+
+  label[for="camera"] {
+    margin-left: 25px;
+  }
+}
+
+
+@media (max-width: 600px) {
+  body {
+    padding-top: 20px;
+  }
+
+  #title {
+    margin-left: 18px;
+
+    font-size: 32px;
+  }
+
+  #feed-stats {
+    margin: 0 18px;
+
+    row-gap: 14px;
+  }
+
+  #stats {
+    padding: 20px;
+  }
+
+  #reps,
+  #score {
+    font-size: 34px;
+  }
+
+  label[for="camera"] {
+    margin-left: 18px;
+  }
+
+  #camera {
+    margin-bottom: 10px;
+  }
+
+  #start,
+  #end {
+    margin-top: 8px;
+  }
 }
