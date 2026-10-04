@@ -104,6 +104,7 @@ async function findCameras() {
 
   const devices = await navigator.mediaDevices.enumerateDevices();
   const cameras = devices.filter((device) => device.kind === "videoinput");
+  const currentCamera = cameraSelect.value;
 
   cameraSelect.innerHTML = '<option value="">Select Camera</option>';
 
@@ -112,6 +113,10 @@ async function findCameras() {
 
     option.value = device.deviceId;
     option.textContent = device.label || `Camera ${index + 1}`;
+
+    if (device.deviceId === currentCamera) {
+      option.selected = true;
+    }
 
     cameraSelect.appendChild(option);
   });
