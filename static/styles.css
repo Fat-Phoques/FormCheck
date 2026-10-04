@@ -10,15 +10,10 @@
   --green-dark: #318b55;
   --green-soft: #e3f4e9;
 
-  --blue-soft: #e8f1fb;
-
   --border: #e1e9e4;
 
-  --shadow:
-    0 8px 30px rgba(32, 59, 43, 0.08);
-
-  --shadow-hover:
-    0 14px 36px rgba(32, 59, 43, 0.12);
+  --shadow: 0 8px 30px rgba(32, 59, 43, 0.08);
+  --shadow-hover: 0 14px 36px rgba(32, 59, 43, 0.12);
 
   --radius: 20px;
 }
@@ -32,9 +27,14 @@
   box-sizing: border-box;
 }
 
-html {
+html,
+body {
+  width: 100%;
   min-height: 100%;
+  margin: 0;
+}
 
+html {
   font-family:
     Inter,
     -apple-system,
@@ -48,23 +48,21 @@ html {
 
   background:
     radial-gradient(
-      circle at 8% 5%,
+      circle at 5% 0%,
       rgba(69, 168, 107, 0.10),
-      transparent 25%
+      transparent 28%
     ),
     radial-gradient(
-      circle at 92% 8%,
+      circle at 95% 5%,
       rgba(100, 153, 225, 0.09),
-      transparent 25%
+      transparent 28%
     ),
     var(--background);
 }
 
 body {
-  margin: 0;
   min-height: 100vh;
-
-  padding-top: 28px;
+  padding: 28px 42px 36px;
 }
 
 
@@ -73,14 +71,14 @@ body {
    ================================ */
 
 #title {
-  margin: 0 0 22px 50px;
+  margin: 0 0 24px 0;
 
-  font-size: 38px;
+  font-size: clamp(30px, 3vw, 42px);
   line-height: 1;
 
   font-weight: 850;
 
-  letter-spacing: -1.5px;
+  letter-spacing: -1.8px;
 
   color: var(--text);
 }
@@ -95,7 +93,7 @@ body {
 
   margin-left: 7px;
 
-  vertical-align: 7px;
+  vertical-align: 8px;
 
   border-radius: 50%;
 
@@ -104,24 +102,21 @@ body {
 
 
 /* ================================
-   MAIN LAYOUT
+   MAIN DASHBOARD
    ================================ */
 
 #feed-stats {
+  width: 100%;
+
   display: grid;
 
-  grid-template-columns:
-    minmax(500px, 640px)
-    minmax(320px, 500px);
+  grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
 
-  grid-template-rows: auto auto;
+  grid-template-rows: auto 1fr;
 
-  column-gap: 24px;
-  row-gap: 18px;
+  gap: 20px 24px;
 
-  align-items: start;
-
-  margin: 0 50px;
+  align-items: stretch;
 }
 
 
@@ -133,7 +128,9 @@ body {
   position: relative;
 
   width: 100%;
-  height: 450px;
+
+  height: calc(100vh - 190px);
+  min-height: 450px;
 
   margin: 0;
 
@@ -159,6 +156,7 @@ body {
 
 #video-container:hover {
   transform: translateY(-2px);
+
   box-shadow: var(--shadow-hover);
 }
 
@@ -175,7 +173,7 @@ body {
 
 
 /* ================================
-   STATS CARD
+   STATS
    ================================ */
 
 #stats {
@@ -186,16 +184,16 @@ body {
   height: fit-content;
 
   margin: 0;
-  padding: 26px;
+
+  padding: 28px;
 
   display: grid;
 
   grid-template-columns: 1fr 1fr;
 
-  column-gap: 20px;
-  row-gap: 4px;
+  column-gap: 24px;
 
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(255, 255, 255, 0.95);
 
   border: 1px solid var(--border);
 
@@ -213,7 +211,7 @@ body {
 
 #reps-label,
 #rating-label {
-  margin: 0 0 4px 0;
+  margin: 0 0 8px 0;
 
   color: var(--muted);
 
@@ -238,7 +236,7 @@ body {
 
 
 /* ================================
-   REP COUNT
+   REPS
    ================================ */
 
 #reps {
@@ -247,13 +245,13 @@ body {
 
   margin: 0;
 
-  font-size: 42px;
+  font-size: clamp(38px, 4vw, 52px);
 
   line-height: 1;
 
   font-weight: 850;
 
-  letter-spacing: -1.5px;
+  letter-spacing: -2px;
 
   color: var(--text);
 }
@@ -268,6 +266,7 @@ body {
   grid-row: 2;
 
   display: flex;
+
   align-items: baseline;
 
   margin: 0;
@@ -282,13 +281,13 @@ body {
 #score {
   margin: 0 5px 0 0;
 
-  font-size: 42px;
+  font-size: clamp(38px, 4vw, 52px);
 
   line-height: 1;
 
   font-weight: 850;
 
-  letter-spacing: -1.5px;
+  letter-spacing: -2px;
 
   color: var(--green-dark);
 }
@@ -304,13 +303,14 @@ body {
 
   width: 100%;
 
-  min-height: 105px;
+  min-height: 140px;
 
   margin: 0;
 
-  padding: 22px 24px;
+  padding: 26px;
 
   display: flex;
+
   align-items: center;
 
   background:
@@ -324,11 +324,12 @@ body {
 
   border-radius: var(--radius);
 
-  box-shadow: 0 6px 20px rgba(44, 95, 61, 0.06);
+  box-shadow:
+    0 6px 20px rgba(44, 95, 61, 0.06);
 
-  font-size: 16px;
+  font-size: 17px;
 
-  line-height: 1.45;
+  line-height: 1.5;
 
   font-weight: 650;
 
@@ -348,15 +349,13 @@ body {
 
 
 /* ================================
-   CAMERA CONTROLS
+   CONTROLS
    ================================ */
 
 label[for="camera"] {
   display: inline-block;
 
-  margin-top: 22px;
-  margin-left: 50px;
-  margin-right: 8px;
+  margin: 20px 8px 0 0;
 
   color: var(--muted);
 
@@ -431,8 +430,6 @@ button {
 
   font-weight: 750;
 
-  letter-spacing: 0.01em;
-
   cursor: pointer;
 
   transition:
@@ -496,7 +493,9 @@ button {
 }
 
 
-/* DISABLED BUTTONS */
+/* ================================
+   DISABLED STATES
+   ================================ */
 
 button:disabled {
   opacity: 0.55;
@@ -525,17 +524,22 @@ button:focus-visible,
    RESPONSIVE
    ================================ */
 
-@media (max-width: 1000px) {
+@media (max-width: 950px) {
+  body {
+    padding: 22px 24px 30px;
+  }
+
   #feed-stats {
     grid-template-columns: 1fr;
-
-    margin: 0 25px;
+    grid-template-rows: auto auto auto;
   }
 
   #video-container {
     height: auto;
 
     aspect-ratio: 640 / 450;
+
+    min-height: 0;
   }
 
   #stats {
@@ -547,32 +551,18 @@ button:focus-visible,
     grid-column: 1;
     grid-row: 3;
   }
-
-  #title {
-    margin-left: 25px;
-  }
-
-  label[for="camera"] {
-    margin-left: 25px;
-  }
 }
 
 
 @media (max-width: 600px) {
   body {
-    padding-top: 20px;
+    padding: 18px;
   }
 
   #title {
-    margin-left: 18px;
+    margin-bottom: 18px;
 
-    font-size: 32px;
-  }
-
-  #feed-stats {
-    margin: 0 18px;
-
-    row-gap: 14px;
+    font-size: 30px;
   }
 
   #stats {
@@ -581,15 +571,19 @@ button:focus-visible,
 
   #reps,
   #score {
-    font-size: 34px;
+    font-size: 36px;
   }
 
-  label[for="camera"] {
-    margin-left: 18px;
+  #feedback {
+    min-height: 110px;
+
+    padding: 20px;
+
+    font-size: 15px;
   }
 
   #camera {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   #start,
