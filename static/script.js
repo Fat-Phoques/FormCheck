@@ -826,12 +826,15 @@ function bicepCurls(angle) {
     return;
   }
 
-  if (angle > 165 && bicepState === "down") {
+  // Finish the curl when the arm returns close to its starting position.
+  // 150 degrees is more forgiving of webcam pose-estimation noise.
+  if (angle >= 150 && bicepState === "down") {
     reps += 1;
     bicepState = "up";
     repCountDisplay.textContent = String(reps);
 
     score = setRating(0);
+    repBestScore = 0;
     ratingDisplay.textContent = score;
 
     setFeedback("Good rep. Keep the next one controlled.");
