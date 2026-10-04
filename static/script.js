@@ -9,6 +9,8 @@ const ctx = canvas.getContext("2d", { alpha: true });
 const cameraSelect = document.getElementById("camera");
 const startButton = document.getElementById("start-button");
 const stopButton = document.getElementById("stop-button");
+const squatsButton = document.getElementById("squats-button");
+const bicepCurlsButton = document.getElementById("bicep-curls-button");
 
 const formStatus = document.getElementById("form-status");
 const repCountDisplay = document.getElementById("rep-count");
@@ -49,6 +51,8 @@ let startingCamera = false;
 
 let reps = 0;
 let squatState = "up";
+let currentExercise = "squats";
+let score = 0;
 let lastFeedback = "";
 let poseLoading = false;
 
@@ -74,9 +78,10 @@ function setRating(value) {
 function resetWorkoutState() {
   reps = 0;
   squatState = "up";
-  repCountDisplay.textContent = "0";
   score = setRating(0);
+  repCountDisplay.textContent = "0";
   ratingDisplay.textContent = score;
+  lastFeedback = "";
 
   Object.keys(jointHistory).forEach((key) => {
     delete jointHistory[key];
@@ -582,9 +587,12 @@ function drawPose(result) {
   drawLine(leg.knee, leg.ankle);
 
   const kneeAngle = calculateAngle(leg.hip, leg.knee, leg.ankle);
-  score = setRating(calculateFormScore(kneeAngle));
-  ratingDisplay.textContent = score;
-  checkSquat(kneeAngle);
+  if (currentExercise === "squats") {
+    squats(kneeAngle);
+  } else {
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+  }
 }
 
 // ======================================================
@@ -687,7 +695,17 @@ function calculateFormScore(angle) {
 // SQUAT DETECTION
 // ======================================================
 
-function checkSquat(angle) {
+function squats(angle) {
+  // The rating is only shown while the user is performing the squat.
+  // Once the user completes the rep and stands back up, the rating resets to 0.
+  if (squatState === "down") {
+    score = setRating(calculateFormScore(angle));
+    ratingDisplay.textContent = score;
+  } else {
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+  }
+
   if (angle < 100 && squatState === "up") {
     squatState = "down";
     setFeedback("Good depth. Drive back up with control.");
@@ -698,6 +716,11 @@ function checkSquat(angle) {
     reps += 1;
     squatState = "up";
     repCountDisplay.textContent = String(reps);
+
+    // Rep is complete, so reset the current form score.
+    score = setRating(0);
+    ratingDisplay.textContent = score;
+
     setFeedback("Good rep. Keep the next one controlled.");
     return;
   }
@@ -713,6 +736,22 @@ function checkSquat(angle) {
 
 startButton.addEventListener("click", startCamera);
 stopButton.addEventListener("click", () => stopCamera(true));
+
+squatsButton.addEventListener("click", () => {
+  currentExercise = "squats";
+  squatsButton.classList.add("active");
+  bicepCurlsButton.classList.remove("active");
+  resetWorkoutState();
+  setFeedback("Squats selected. Press Start Camera to begin.");
+});
+
+bicepCurlsButton.addEventListener("click", () => {
+  currentExercise = "bicepCurls";
+  bicepCurlsButton.classList.add("active");
+  squatsButton.classList.remove("active");
+  resetWorkoutState();
+  setFeedback("Bicep Curls selected. Exercise tracking is not available yet.");
+});
 
 cameraSelect.addEventListener("change", async () => {
   if (cameraRunning && cameraSelect.value) {
