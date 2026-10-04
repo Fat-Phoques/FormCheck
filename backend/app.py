@@ -4,15 +4,17 @@ import sqlite3
 from flask import Flask, render_template, request, jsonify
 
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 app = Flask(
     __name__,
-    template_folder="../templates",
-    static_folder="../static",
+    template_folder=os.path.join(BASE_DIR, "templates"),
+    static_folder=os.path.join(BASE_DIR, "static"),
     static_url_path="/static",
 )
 
 
-DATABASE = "instance/formcheck.db"
+DATABASE = os.path.join(BASE_DIR, "instance", "formcheck.db")
 
 
 def get_database():
